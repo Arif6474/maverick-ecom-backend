@@ -1,7 +1,7 @@
 import asyncHandler from 'express-async-handler'
 import Order from '#models/order/orderModel.js';
 import Product from '#models/productModel.js';
-import User from '#models/userModels/userModel.js';
+import Customer from '#models/userModels/customerModel.js';
 import PromoCode from '#models/promoCodeModel.js';
 import { generateCustomOrderId } from '#utils/orderId.js';
 import { createConsignmentAutoAWB } from './shopifyDelivery.js';
@@ -11,11 +11,11 @@ import { getDocumentsWithQuery } from '#crudServices/crudServices.js';
 export const createOrder = async (req, res) => {
     try {
         const { totalAmount, paymentMethod, shippingDetails, products, promoCodeId } = req.body;
-        const userId = req.user._id;
+        const customerId = req.customer._id;
 
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(400).json({ message: 'User not found' });
+        const customer = await Customer.findById(customerId);
+        if (!customer) {
+            return res.status(400).json({ message: 'Customer not found' });
         }
 
         // Validate products
@@ -61,7 +61,7 @@ export const createOrder = async (req, res) => {
         // Create a new order document
         const newOrder = new Order({
             orderId: generateCustomOrderId(), // Generate a unique order ID
-            user: userId,
+            customer: customerId,
             totalAmount,
             discount,
             finalAmount,
@@ -89,18 +89,18 @@ export const createOrder = async (req, res) => {
     }
 };
 
-// Get all orders (optionally filtered by user or order status)
+// Get all orders (optionally filtered by customer or order status)
 export const getOrders = async (req, res) => {
     try {
-        const { userId, orderStatus } = req.query;
+        const { customerId, orderStatus } = req.query;
 
         const filter = {};
 
-        if (userId) filter.user = userId;
+        if (customerId) filter.customer = customerId;
         if (orderStatus) filter.orderStatus = orderStatus;
 
         const orders = await Order.find(filter)
-            .populate('user', 'name email')  // Populate user details
+            .populate('customer', 'name email')  // Populate customer details
             .populate('products.product', 'title price');  // Populate product details
 
         return res.status(200).json({ orders });
@@ -116,7 +116,7 @@ export const getOrderById = async (req, res) => {
         const { orderId } = req.params;
 
         const order = await Order.findById(orderId)
-            .populate('user', 'name email')
+            .populate('customer', 'name email')
             .populate('products.product', 'title price')
             .populate('promoCode', 'code discountType discountValue');
 
@@ -185,13 +185,13 @@ export const deleteOrder = async (req, res) => {
 
 export const getMyAllOrders = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const customerId = req.customer._id;
 
-        const orders = await Order.find({ user: userId })
+        const orders = await Order.find({ customer: customerId })
             .populate('products.product');
 
         if (!orders || orders.length === 0) {
-            return res.status(404).json({ message: 'No orders found for this user' });
+            return res.status(404).json({ message: 'No orders found for this customer' });
         }
 
         return res.status(200).json({ orders });
@@ -205,14 +205,14 @@ export const getMyAllOrders = async (req, res) => {
 export const getMyOrderById = async (req, res) => {
     try {
         const orderId = req.params.orderId;
-        const userId = req.user._id;
+        const customerId = req.customer._id;
 
-        const order = await Order.findOne({ _id: orderId, user: userId })
+        const order = await Order.findOne({ _id: orderId, customer: customerId })
             .populate('products.product')
             .populate('promoCode');
 
         if (!order) {
-            return res.status(404).json({ message: 'Order not found for this user' });
+            return res.status(404).json({ message: 'Order not found for this customer' });
         }
 
         return res.status(200).json({ order });
@@ -253,7 +253,7 @@ export const getOrdersByStatus = async (req, res) => {
         const { orderStatus } = req.params;
 
         const orders = await Order.find({ orderStatus })
-            .populate('user')
+            .populate('customer')
             .populate('products.product')
             .sort({ createdAt: -1 }); // Sort by creation date, most recent first
 
@@ -296,7 +296,7 @@ export const getSingleOrder = async (req, res) => {
         const { orderId } = req.params;
 
         const order = await Order.findById(orderId)
-            .populate('user', '-password')
+            .populate('customer', '-password')
             .populate('products.product')
             .populate('promoCode');
 
@@ -334,7 +334,7 @@ export const forwardOrderToShopifyDelivery = async (req, res) => {
 
 export const getOrdersWithQuery = asyncHandler(async (req, res) => {
     const filters = {
-        user: req.query.user,
+        customer: req.query.customer,
         orderStatus: req.query.orderStatus,
     };
     await getDocumentsWithQuery({ model: Order, req, res, filters });

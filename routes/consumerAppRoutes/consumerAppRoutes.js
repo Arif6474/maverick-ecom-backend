@@ -2,13 +2,13 @@ import { Router } from 'express'
 
 import publicRoutes from './publicRoutes/publicRoutes.js'
 import protectedRoutes from './protectedRoutes/protectedRoutes.js'
-import { protectForUser } from '#middlewares/authMiddleware.js'
+import { protectForCustomer } from '#middlewares/authMiddleware.js'
 
 
 const consumerAppRoutes = Router()
 
 consumerAppRoutes.use('/public', publicRoutes)
-consumerAppRoutes.use('/protected', protectForUser, protectedRoutes)
+consumerAppRoutes.use('/protected', protectForCustomer, protectedRoutes)
 
 
 

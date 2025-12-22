@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { createOrder, getMyAllOrders, getMyOrderById } from '#controllers/order/orderController.js'
-import { updateProfile } from '#controllers/userControllers/userController.js'
+import { updateProfile } from '#controllers/userControllers/customerController.js'
 import wishlistRoutes from './wishlistRoutes.js'
 
 const protectedRoutes = Router()

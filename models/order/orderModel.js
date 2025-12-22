@@ -3,7 +3,7 @@ const { model, Schema } = mongoose;
 
 const orderSchema = Schema({
   orderId: { type: String, required: true, unique: true },
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  customer: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
   totalAmount: { type: Number, required: true },
   promoCode: { type: Schema.Types.ObjectId, ref: 'PromoCode' },
   discount: { type: Number, default: 0 },

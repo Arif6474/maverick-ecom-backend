@@ -1,4 +1,4 @@
-import User from "#models/userModels/userModel.js";
+import Customer from "#models/userModels/customerModel.js";
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 const { genSalt, hash, compare } = bcrypt
@@ -17,7 +17,7 @@ import {
 } from '#crudServices/crudServices.js';
 import asyncHandler from 'express-async-handler';
 
-const registerUser = async (req, res) => {
+const registerCustomer = async (req, res) => {
   try {
     const { name, phone, email, password, confirmPassword } = req.body;
 
@@ -29,29 +29,29 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Passwords do not match" });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    const existingCustomer = await Customer.findOne({ email });
+    if (existingCustomer) {
       return res.status(409).json({ message: "Email already in use" });
     }
 
     const salt = await genSalt(10)
     const hashedPassword = await hash(password, salt)
 
-    const user = new User({
+    const customer = new Customer({
       name,
       phone,
       email,
       password: hashedPassword,
     });
 
-    await user.save();
-    const token = generateToken(user._id);
+    await customer.save();
+    const token = generateToken(customer._id);
 
     res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      phone: user.phone,
-      email: user.email,
+      _id: customer._id,
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email,
       token,
     });
   } catch (error) {
@@ -60,7 +60,7 @@ const registerUser = async (req, res) => {
   }
 };
 
-const loginUser = async (req, res) => {
+const loginCustomer = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -68,28 +68,28 @@ const loginUser = async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ email });
+    const customer = await Customer.findOne({ email });
 
-    if (!user) {
+    if (!customer) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const isMatch = await compare(password, user.password);
+    const isMatch = await compare(password, customer.password);
 
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = generateToken(user._id);
+    const token = generateToken(customer._id);
 
     res.status(200).json({
-      _id: user._id,
-      name: user.name,
-      phone: user.phone,
-      email: user.email,
-      image: user.image,
-      address: user.address,
-      bio: user.bio,
+      _id: customer._id,
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email,
+      image: customer.image,
+      address: customer.address,
+      bio: customer.bio,
       token,
     });
   } catch (error) {
@@ -105,15 +105,15 @@ const forgotPassword = async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ email });
+    const customer = await Customer.findOne({ email });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
     }
 
-    const token = generateToken(user._id);
+    const token = generateToken(customer._id);
     const resetLink = `${process.env.CONSUMER_APP_LINK}/reset-password/${token}`;
-    await sendForgotPasswordMail(user.email, resetLink);
+    await sendForgotPasswordMail(customer.email, resetLink);
 
     res.status(200).json({ message: "Password reset token sent", token });
   } catch (error) {
@@ -131,17 +131,17 @@ const resetPassword = async (req, res) => {
 
   try {
     const decoded = verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const customer = await Customer.findById(decoded.id);
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
     }
 
     const salt = await genSalt(10);
     const hashedPassword = await hash(newPassword, salt);
 
-    user.password = hashedPassword;
-    await user.save();
+    customer.password = hashedPassword;
+    await customer.save();
 
     res.status(200).json({ message: "Password reset successfully" });
   } catch (error) {
@@ -157,13 +157,13 @@ const getEmailFromToken = async (req, res) => {
   }
   try {
     const decoded = verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const customer = await Customer.findById(decoded.id);
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
     }
 
-    res.status(200).json({ email: user.email });
+    res.status(200).json({ email: customer.email });
   } catch (error) {
     console.error("Get email from token error:", error);
     res.status(500).json({ message: "Server error" });
@@ -179,29 +179,29 @@ const loginWithGoogle = async (req, res) => {
   }
 
   try {
-    let user = await User.findOne({ email });
+    let customer = await Customer.findOne({ email });
 
-    if (!user) {
-      user = new User({
+    if (!customer) {
+      customer = new Customer({
         name,
         phone,
         email,
         password: null,
         image
       });
-      await user.save();
+      await customer.save();
     }
 
-    const token = generateToken(user._id);
+    const token = generateToken(customer._id);
 
     res.status(200).json({
-      _id: user._id,
-      name: user.name,
-      phone: user.phone,
-      email: user.email,
-      image: user.image,
-      address: user.address,
-      bio: user.bio,
+      _id: customer._id,
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email,
+      image: customer.image,
+      address: customer.address,
+      bio: customer.bio,
       token,
     });
   } catch (error) {
@@ -211,20 +211,20 @@ const loginWithGoogle = async (req, res) => {
 }
 
 const updateProfile = async (req, res) => {
-  const userId = req.user._id;
+  const customerId = req.customer._id;
 
-  const user = await User.findById(userId);
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
+  const customer = await Customer.findById(customerId);
+  if (!customer) {
+    return res.status(404).json({ message: "Customer not found" });
   }
-  const updateProfileData = await User.findByIdAndUpdate(userId, req.body, { new: true }).select('-password -__v');
+  const updateProfileData = await Customer.findByIdAndUpdate(customerId, req.body, { new: true }).select('-password -__v');
   res.status(200).json(updateProfileData);
 }
 
 
 export {
-  loginUser,
-  registerUser,
+  loginCustomer,
+  registerCustomer,
   forgotPassword,
   resetPassword,
   getEmailFromToken,

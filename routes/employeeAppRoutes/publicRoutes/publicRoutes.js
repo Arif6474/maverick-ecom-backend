@@ -1,9 +1,18 @@
 import { Router } from "express";
-import { loginUser } from "#controllers/userControllers/userController.js";
+import {
+    loginEmployee,
+    registerEmployee,
+    forgotEmployeePassword,
+    resetEmployeePassword,
+    getEmailFromToken
+} from "#controllers/userControllers/employeeController.js";
 
 const publicRoutes = Router();
 
-// Re-using user login for now as employee login was removed
-publicRoutes.post('/login', loginUser);
+publicRoutes.post('/login', loginEmployee);
+publicRoutes.post('/register', registerEmployee);
+publicRoutes.post('/forgotPassword', forgotEmployeePassword);
+publicRoutes.post('/resetPassword', resetEmployeePassword);
+publicRoutes.get('/getEmailFromToken/:token', getEmailFromToken);
 
 export default publicRoutes;

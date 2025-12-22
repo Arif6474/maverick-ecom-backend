@@ -1,5 +1,6 @@
 import asyncHandler from 'express-async-handler'
 import Wishlist from '#models/wishlistModel.js'
+import Customer from '#models/userModels/customerModel.js'
 
 import { archiveDocument, createDocument, deleteDocument, getAllDocuments, getDocumentsWithQuery, getSingleDocument, updateDocument } from '#crudServices/crudServices.js';
 
@@ -12,9 +13,9 @@ const getSingleWishlist = asyncHandler(async (req, res) => {
 })
 
 const createWishlist = asyncHandler(async (req, res) => {
-    const userId = req.user._id;
+    const customerId = req.customer._id;
     const { product } = req.body;
-    const wishlist = await Wishlist.findOne({ user: userId, product })
+    const wishlist = await Wishlist.findOne({ customer: customerId, product })
 
     if (wishlist) {
         // toggle follow/unfollow
@@ -23,7 +24,7 @@ const createWishlist = asyncHandler(async (req, res) => {
         return res.status(200).json({ message: wishlist.isActive ? "Favorited" : "Unfavorited" });
     }
 
-    await Wishlist.create({ user: userId, product });
+    await Wishlist.create({ customer: customerId, product });
     res.status(201).json({ message: "Favorited" });
 
 })
@@ -46,31 +47,31 @@ const getWishlistWithQuery = asyncHandler(async (req, res) => {
 })
 
 const getWishlistByUserId = asyncHandler(async (req, res) => {
-    const { userId } = req.params;
-    const wishlists = await Wishlist.find({ user: userId }).populate('product');
+    const { customerId } = req.params;
+    const wishlists = await Wishlist.find({ customer: customerId }).populate('product');
     if (!wishlists) {
-        return res.status(404).json({ message: 'No wishlists found for this user' });
+        return res.status(404).json({ message: 'No wishlists found for this customer' });
     }
     res.status(200).json(wishlists);
 })
 
 const checkProductWishlist = asyncHandler(async (req, res) => {
     const { product } = req.query;
-    const userId = req.user._id;
+    const customerId = req.customer._id;
 
-    const existing = await Wishlist.findOne({ user: userId, product: product, isActive: true });
+    const existing = await Wishlist.findOne({ customer: customerId, product: product, isActive: true });
 
     res.status(200).json({ isFavorited: !!existing });
 })
 
 const getMyWishlists = asyncHandler(async (req, res) => {
-    const userId = req.user._id;
-    const wishlists = await Wishlist.find({ user: userId, isActive: true })
+    const customerId = req.customer._id;
+    const wishlists = await Wishlist.find({ customer: customerId, isActive: true })
         .populate('product')
         .select('product -_id');
 
     if (!wishlists || wishlists.length === 0) {
-        return res.status(404).json({ message: 'No wishlists found for this user' });
+        return res.status(404).json({ message: 'No wishlists found for this customer' });
     }
 
     res.status(200).json(wishlists);
