@@ -19,7 +19,6 @@ const getAllEmployeesWithQuery = asyncHandler(async (req, res) => {
 const loginEmployee = asyncHandler (async (req,res) => {
 
     const {email, password} = req.body
-
     const employee = await Employee.findOne({email})
 
     if(!employee) {
@@ -35,6 +34,7 @@ const loginEmployee = asyncHandler (async (req,res) => {
             email: employee.email,
             level: employee.level,
             image: employee.image,
+            isRegistered: employee.isRegistered,
             token: generateToken(employee._id)
         })
     } else {

@@ -23,6 +23,10 @@ const employeeSchema = new Schema({
     image: {
         type: String,
     },
+    isRegistered: {
+        type: Boolean,
+        default: false,
+    },
     isActive: {
         type: Boolean,
         default: true,
