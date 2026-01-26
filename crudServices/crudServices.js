@@ -204,6 +204,11 @@ const getDocumentsWithQuery = async ({ model, req, res, filters }) => {
             ]
         };
 
+        // Explicitly handle category filter from query params
+        if (req.query.category) {
+            searchCondition.category = req.query.category;
+        }
+
         if (filter === 'Active') {
             searchCondition.isActive = true
         } else if (filter === 'Archived') {

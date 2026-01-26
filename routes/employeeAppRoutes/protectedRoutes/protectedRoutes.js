@@ -5,6 +5,7 @@ import productSizeRoutes from "./productSizeRoutes.js";
 import categoryRoutes from "./categoryRoutes.js";
 import orderRoutes from "./orderRoutes.js";
 import promoCodeRoutes from "./promoCodeRoutes.js";
+import subcategoryRoutes from "./subcategoryRoutes.js";
 
 const protectedRoutes = Router();
 
@@ -13,6 +14,7 @@ protectedRoutes.use('/product', productRoutes);
 protectedRoutes.use('/productColor', productColorRoutes);
 protectedRoutes.use('/productSize', productSizeRoutes);
 protectedRoutes.use('/category', categoryRoutes);
+protectedRoutes.use('/subcategory', subcategoryRoutes);
 protectedRoutes.use('/order', orderRoutes);
 protectedRoutes.use('/promoCode', promoCodeRoutes);
 
