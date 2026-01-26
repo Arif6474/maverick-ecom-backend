@@ -1,8 +1,6 @@
 import { updateFile } from "#utils/updateFile.js";
 import { uploadFile } from "#utils/uploadFile.js";
 import { deleteFile } from "#utils/deleteFile.js";
-import path from "path";
-import fs from 'fs/promises';
 
 const getAllDocuments = async ({ model, req, res, sortBy }) => {
     const { search, filter } = req.query
@@ -64,14 +62,12 @@ const createDocument = async ({ model, req, res, folderName, createdBy }) => {
     const uploadedFiles = [];
     try {
         const newDocumentData = { ...req.body };
-        const uploadDir = path.join(process.cwd(), 'Uploads', folderName);
-        await fs.mkdir(uploadDir, { recursive: true });
 
         if (req.files) {
             for (const [key, files] of Object.entries(req.files)) {
                 for (const file of Array.isArray(files) ? files : [files]) {
                     const fileName = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
-                    const filePath = path.join(folderName, fileName);
+                    const filePath = `${folderName}/${fileName}`;
 
                     await uploadFile(file.mimetype, filePath, file.buffer);
                     uploadedFiles.push(filePath);
@@ -90,7 +86,7 @@ const createDocument = async ({ model, req, res, folderName, createdBy }) => {
     } catch (error) {
         for (const filePath of uploadedFiles) {
             try {
-                await fs.unlink(path.join(process.cwd(), 'Uploads', filePath));
+                await deleteFile(filePath);
             } catch (err) {
                 console.error(`Failed to clean up file ${filePath}:`.red, err);
             }
@@ -100,46 +96,6 @@ const createDocument = async ({ model, req, res, folderName, createdBy }) => {
 };
 
 
-// const updateDocument = async ({ model, req, res, folderName }) => {
-//     try {
-//         const { id } = req.params;
-//         const updateData = { ...req.body };
-
-//         const document = await model.findById(id);
-//         if (!document) {
-//             return res.status(404).json({ message: 'Document not found' });
-//         }
-
-//         if (!req.files) {
-
-//             await model.findByIdAndUpdate(id, updateData)
-
-//             const updatedDocument = await model.findById(id)
-
-//             res.status(200).json(updatedDocument)
-//         }
-
-//         if (req.files) {
-//             for (const [key, file] of Object.entries(req.files)) {
-//                 const fileName = `${Date.now()}-${file.name}`;
-//                 const filePath = `${folderName}/${fileName}`;
-
-//                 await updateFile(filePath, file.data, document[key], file.mimetype)
-
-//                 updateData[key] = filePath;
-
-//             }
-//             await model.findByIdAndUpdate(id, updateData);
-//         }
-
-
-//         const updatedDocument = await model.findById(id);
-
-//         res.status(200).json(updatedDocument);
-//     } catch (error) {
-//         res.status(400).json({ error: error.message });
-//     }
-// };
 const updateDocument = async ({ model, req, res, folderName }) => {
     try {
         const { id } = req.params;
@@ -154,7 +110,7 @@ const updateDocument = async ({ model, req, res, folderName }) => {
             for (const [key, files] of Object.entries(req.files)) {
                 for (const file of Array.isArray(files) ? files : [files]) {
                     const fileName = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
-                    const filePath = path.join(folderName, fileName);
+                    const filePath = `${folderName}/${fileName}`;
 
                     const newFileUrl = await updateFile(
                         filePath,
